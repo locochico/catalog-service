@@ -19,17 +19,25 @@ class CatalogServiceApplicationTests {
 
 	@Test
 	void whenPostRequestThenBookCreated() {
-		var expectedBook = Book.of("1231231231", "Title", "Author", 9.90, "Polarsophia");
+		var bookIsbn = "1231231230";
+		var bookToCreate = Book.of(bookIsbn, "Title", "Author", 9.90, "Polarsophia");
+		Book expectedBook = webTestClient
+				.post()
+				.uri("/books")
+				.bodyValue(bookToCreate)
+				.exchange()
+				.expectStatus().isCreated()
+				.expectBody(Book.class).value(book -> assertThat(book).isNotNull())
+				.returnResult().getResponseBody();
 
 		webTestClient
-			.post()
-			.uri("/books")
-			.bodyValue(expectedBook)
-			.exchange()
-			.expectStatus().isCreated()
-			.expectBody(Book.class).value(actualBook -> {
-				assertThat(actualBook).isNotNull();
-				assertThat(actualBook.isbn()).isEqualTo(expectedBook.isbn());
-			});
+				.get()
+				.uri("/books/" + bookIsbn)
+				.exchange()
+				.expectStatus().is2xxSuccessful()
+				.expectBody(Book.class).value(actualBook -> {
+					assertThat(actualBook).isNotNull();
+					assertThat(actualBook.isbn()).isEqualTo(expectedBook.isbn());
+				});
 	}
 }
